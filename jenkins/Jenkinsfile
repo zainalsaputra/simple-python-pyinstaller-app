@@ -1,8 +1,8 @@
 node {
-    def dockerImage = 'python:3.11-slim'
+    def pythonImage = 'python:3.11-slim'
 
     stage('Build') {
-        docker.image(dockerImage).inside {
+        docker.image(pythonImage).inside {
             sh '''
                 python --version
                 python -m py_compile sources/add2vals.py sources/calc.py
@@ -11,7 +11,7 @@ node {
     }
 
     stage('Test') {
-        docker.image(dockerImage).inside {
+        docker.image(pythonImage).inside {
             sh '''
                 pip install pytest
                 mkdir -p test-reports
@@ -23,8 +23,10 @@ node {
     }
 
     stage('Deliver') {
-        docker.image(dockerImage).inside {
+        docker.image(pythonImage).inside {
             sh '''
+                apt-get update
+                apt-get install -y binutils
                 pip install pyinstaller
                 pyinstaller --onefile sources/add2vals.py
             '''
