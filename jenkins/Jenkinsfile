@@ -8,8 +8,12 @@ node {
         sh '''
             echo "Current workspace:"
             pwd
+
             echo "Workspace files:"
             ls -lah
+
+            echo "Sources directory:"
+            ls -lah sources
         '''
     }
 
@@ -45,16 +49,18 @@ node {
                 apt-get install -y binutils
                 pip install --no-cache-dir pyinstaller
 
+                echo "Building executable using PyInstaller..."
                 pyinstaller --onefile sources/add2vals.py
 
-                echo "Application deployed successfully."
-                echo "Running deployed executable for validation:"
+                echo "Validating deployed executable..."
                 ./dist/add2vals 5 7
 
-                echo "Application will stay available/running for 1 minute simulation."
+                echo "Application has been deployed successfully."
+                echo "Keeping deployment stage active for 1 minute..."
                 sleep 60
 
-                echo "Deploy stage completed after 1 minute."
+                echo "Deployment duration completed."
+                echo "Application deployment finished successfully."
             '''
         }
 
@@ -87,13 +93,14 @@ node {
             JUnit test report was generated at test-reports/results.xml.
 
             Manual Approval:
-            Pipeline was paused with the message:
+            Pipeline was paused before deployment with the message:
             "Lanjutkan ke tahap Deploy?"
 
             Deploy:
             Python application was packaged using PyInstaller.
-            The deployed executable was tested.
-            Deploy stage was kept running for 1 minute using sleep 60.
+            The generated executable was validated using sample input.
+            The Deploy stage was kept active for 1 minute using sleep 60.
+            After 1 minute, the pipeline continued automatically and completed successfully.
 
             EOF
         '''
