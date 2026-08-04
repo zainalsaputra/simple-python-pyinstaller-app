@@ -8,12 +8,8 @@ node {
         sh '''
             echo "Current workspace:"
             pwd
-
             echo "Workspace files:"
             ls -lah
-
-            echo "Sources directory:"
-            ls -lah sources
         '''
     }
 
@@ -38,13 +34,27 @@ node {
         junit 'test-reports/results.xml'
     }
 
-    stage('Deliver') {
+    stage('Manual Approval') {
+        input message: 'Lanjutkan ke tahap Deploy?'
+    }
+
+    stage('Deploy') {
         docker.image(pythonImage).inside(dockerArgs) {
             sh '''
                 apt-get update
                 apt-get install -y binutils
                 pip install --no-cache-dir pyinstaller
+
                 pyinstaller --onefile sources/add2vals.py
+
+                echo "Application deployed successfully."
+                echo "Running deployed executable for validation:"
+                ./dist/add2vals 5 7
+
+                echo "Application will stay available/running for 1 minute simulation."
+                sleep 60
+
+                echo "Deploy stage completed after 1 minute."
             '''
         }
 
@@ -54,16 +64,20 @@ node {
     stage('Archive Log') {
         sh '''
             cat > log.txt <<'EOF'
-            CI Pipeline Log Summary
+            CI/CD Pipeline Log Summary
 
             Pipeline Name:
             submission-cicd-pipeline-zainalsaputra
 
+            Project:
+            simple-python-pyinstaller-app
+
             Stages:
-            - Checkout : SUCCESS
-            - Build    : SUCCESS
-            - Test     : SUCCESS
-            - Deliver  : SUCCESS
+            - Checkout        : SUCCESS
+            - Build           : SUCCESS
+            - Test            : SUCCESS
+            - Manual Approval : PROCEEDED
+            - Deploy          : SUCCESS
 
             Build:
             Python source files were compiled successfully.
@@ -72,9 +86,14 @@ node {
             Unit tests were executed using pytest.
             JUnit test report was generated at test-reports/results.xml.
 
-            Deliver:
-            Application was packaged using PyInstaller.
-            Artifact was generated at dist/add2vals.
+            Manual Approval:
+            Pipeline was paused with the message:
+            "Lanjutkan ke tahap Deploy?"
+
+            Deploy:
+            Python application was packaged using PyInstaller.
+            The deployed executable was tested.
+            Deploy stage was kept running for 1 minute using sleep 60.
 
             EOF
         '''
